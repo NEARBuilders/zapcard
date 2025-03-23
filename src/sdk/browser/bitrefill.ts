@@ -2,11 +2,21 @@
  * Bitrefill browser automation
  */
 
+import type { Frame, Page, Browser as PlaywrightBrowser } from 'playwright';
 import { chromium } from 'playwright';
-import type { Browser as PlaywrightBrowser, Page, Frame } from 'playwright';
-import type { BrowserOptions, IBitrefillBrowser } from './types';
 import type { CardDenomination, DepositInfo, PaymentMethod } from '../api/types';
-import { retry } from '../utils';
+import {
+  handleCookieBanner,
+  humanClick,
+  humanClickLocator,
+  humanScroll,
+  humanType,
+  randomExploration,
+  randomSleep,
+  retry,
+  shouldPerformAction
+} from '../utils';
+import type { BrowserOptions, IBitrefillBrowser } from './types';
 
 /**
  * Bitrefill embed demo URL
@@ -180,76 +190,19 @@ export class BitrefillBrowser implements IBitrefillBrowser {
           this.log(`Could not find search input: ${searchError instanceof Error ? searchError.message : String(searchError)}`);
         }
 
-        // Handle the cookies banner by finding the dialog and clicking the button
+        // Handle the cookies banner in a human-like way
         this.log('Handling cookies banner...');
         try {
-          // First set the cookie directly as a fallback
-          await frame.evaluate(() => {
-            document.cookie = 'consent={%22functionality_storage%22:true%2C%22analytics_storage%22:false%2C%22ad_storage%22:false%2C%22personalization_storage%22:false}; path=/; max-age=31536000; domain=embed.bitrefill.com; SameSite=None; Secure; Partitioned';
-            return true;
-          });
-          
-          this.log('Consent cookie set as fallback');
-          
-          // Try to find the cookie dialog by role and class
-          this.log('Looking for cookie dialog by role and class...');
-          const cookieDialogSelector = 'div[role="dialog"].cookie-dialog';
-          
-          // Wait for the cookie dialog to appear
-          try {
-            await frame.waitForSelector(cookieDialogSelector, {
-              timeout: 5000 // 5 seconds timeout
-            });
-            this.log('Found cookie dialog by role and class');
-            
-            // Now try to find and click the "Only selected" button
-            this.log('Looking for "Only selected" button...');
-            const onlySelectedButton = frame.locator('button:has-text("Only selected")');
-            
-            if (await onlySelectedButton.count() > 0) {
-              this.log('Found "Only selected" button, clicking it...');
-              await onlySelectedButton.click();
-              this.log('Clicked "Only selected" button');
-              
-              // Wait for the dialog to disappear
-              await frame.waitForSelector(cookieDialogSelector, {
-                state: 'hidden',
-                timeout: 5000
-              });
-              this.log('Cookie dialog disappeared after clicking button');
-            } else {
-              this.log('Could not find "Only selected" button');
-              throw new Error('Could not find "Only selected" button');
-            }
-          } catch (dialogError) {
-            this.log(`Could not find or interact with cookie dialog: ${dialogError instanceof Error ? dialogError.message : String(dialogError)}`);
-            
-            // If we couldn't find or interact with the dialog, try to hide it using CSS
-            this.log('Trying to hide cookie banner using CSS...');
-            await frame.evaluate(() => {
-              const selectors = [
-                'div[role="dialog"]',
-                'div.cookie-dialog',
-                'div:has-text("Want cookies?")'
-              ];
-              
-              selectors.forEach(selector => {
-                const elements = document.querySelectorAll(selector);
-                elements.forEach(el => {
-                  if (el instanceof HTMLElement) {
-                    el.style.display = 'none';
-                    el.style.visibility = 'hidden';
-                    el.style.opacity = '0';
-                    el.setAttribute('aria-hidden', 'true');
-                  }
-                });
-              });
-            });
-            
-            this.log('Attempted to hide cookie banner using CSS');
+          await handleCookieBanner(frame, this.log.bind(this));
+
+          // Add some random human-like behavior after handling cookies
+          if (shouldPerformAction(0.7)) {
+            // Sometimes explore the page a bit after handling cookies
+            await randomSleep(500, 1500);
+            await randomExploration(frame, this.log.bind(this));
           }
         } catch (error) {
-          this.log(`Warning: Error setting consent cookie: ${error instanceof Error ? error.message : String(error)}`);
+          this.log(`Warning: Error handling cookie banner: ${error instanceof Error ? error.message : String(error)}`);
           this.log('Continuing with initialization...');
         }
 
@@ -307,25 +260,32 @@ export class BitrefillBrowser implements IBitrefillBrowser {
       // Navigate directly to the Virtual Prepaid Visa page
       this.log('Navigating directly to Virtual Prepaid Visa page...');
       await this.frameHandle.goto('https://embed.bitrefill.com/us/en/gift-cards/virtual-prepaid-visa-usa/');
-      
+
       this.log('Waiting for page to load...');
       await this.frameHandle.waitForLoadState('networkidle');
 
-      // Wait for amount input to appear and fill it using getByRole
+      // Add some random human-like behavior
+      if (shouldPerformAction(0.7)) {
+        await randomExploration(this.frameHandle, this.log.bind(this));
+      }
+
+      // Wait for amount input to appear
       this.log('Waiting for amount input field...');
       await this.frameHandle.waitForSelector(SELECTORS.amountInput, {
         timeout: this.options.timeout,
       });
 
-      // Enter the denomination amount using direct selector for better reliability
+      // Enter the denomination amount using human-like typing
       this.log(`Entering amount: $${denomination}`);
-      
-      // First clear the input field
-      await this.frameHandle.fill(SELECTORS.amountInput, '');
-      
-      // Then type the amount directly
-      await this.frameHandle.type(SELECTORS.amountInput, denomination.toString(), { delay: 100 });
-      
+      await humanType(
+        this.frameHandle,
+        SELECTORS.amountInput,
+        denomination.toString(),
+        { clearFirst: true, typingSpeed: 'medium' },
+        this.options.timeout,
+        this.log.bind(this)
+      );
+
       // Force blur event to trigger validation
       await this.frameHandle.evaluate((selector) => {
         const input = document.querySelector(selector) as HTMLInputElement;
@@ -337,12 +297,25 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         }
       }, SELECTORS.amountInput);
 
-      // Wait for add to cart button and click it
+      // Add a small delay like a human would
+      await randomSleep(500, 1500);
+
+      // Wait for add to cart button and click it with human-like behavior
       this.log('Waiting for add to cart button...');
-      const submitBtn = this.frameHandle.getByRole("button", { name: "Add to cart"});
+      const submitBtn = this.frameHandle.getByRole("button", { name: "Add to cart" });
+
+      // Sometimes pause a bit before clicking (like a human would)
+      if (shouldPerformAction(0.6)) {
+        await randomSleep(500, 1200);
+      }
 
       this.log('Clicking add to cart button...');
-      await submitBtn.click();
+      await humanClickLocator(
+        this.frameHandle,
+        submitBtn,
+        this.options.timeout,
+        this.log.bind(this)
+      );
 
       this.log('Product navigation complete');
     }, this.options.maxRetries || 3);
@@ -370,18 +343,36 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         timeout: this.options.timeout,
       });
 
-      // Select payment method
-      this.log(`Clicking on ${method} payment method option...`);
-      await this.frameHandle.click(SELECTORS.paymentMethodOption(method));
+      // Add some random human-like behavior
+      if (shouldPerformAction(0.6)) {
+        // Sometimes scroll around a bit before selecting
+        await humanScroll(this.frameHandle, 'down', 'random', 'medium', this.log.bind(this));
+        await randomSleep(500, 1200);
+      }
 
-      // Wait for continue button and click it
+      // Select payment method with human-like click
+      this.log(`Clicking on ${method} payment method option...`);
+      await humanClick(
+        this.frameHandle,
+        SELECTORS.paymentMethodOption(method),
+        this.options.timeout,
+        this.log.bind(this)
+      );
+
+      // Wait for continue button and click it with human-like behavior
       this.log('Waiting for continue button...');
-      await this.frameHandle.waitForSelector(SELECTORS.submitButton, {
-        timeout: this.options.timeout,
-      });
+      const continueBtn = this.frameHandle.getByRole("button", { name: "Continue" });
+
+      // Add a small delay like a human would
+      await randomSleep(800, 1500);
 
       this.log('Clicking continue button...');
-      await this.frameHandle.click(SELECTORS.submitButton);
+      await humanClickLocator(
+        this.frameHandle,
+        continueBtn,
+        this.options.timeout,
+        this.log.bind(this)
+      );
 
       this.log('Payment method selection complete');
     }, this.options.maxRetries || 3);
@@ -411,6 +402,15 @@ export class BitrefillBrowser implements IBitrefillBrowser {
       await this.frameHandle.waitForSelector(SELECTORS.depositAddress, {
         timeout: this.options.timeout,
       });
+
+      // Add some random human-like behavior
+      if (shouldPerformAction(0.5)) {
+        // Sometimes scroll around a bit before extracting info
+        await humanScroll(this.frameHandle, 'down', 'random', 'slow', this.log.bind(this));
+        await randomSleep(500, 1200);
+        await humanScroll(this.frameHandle, 'up', 'random', 'slow', this.log.bind(this));
+        await randomSleep(300, 800);
+      }
 
       // Extract deposit information
       this.log('Extracting deposit address...');

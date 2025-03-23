@@ -16,7 +16,7 @@ export enum CardDenomination {
  * Supported payment methods
  */
 export enum PaymentMethod {
-  BASE_USDC = 'base_usdc',
+  BASE_USDC = 'usdc_base',
   ZCASH = 'zcash',
 }
 

@@ -27,13 +27,13 @@ export interface BrowserOptions {
    * First name to use for the purchase
    * Default: Generated based on country
    */
-  firstName: string;
+  firstName?: string;
   
   /**
    * Last name to use for the purchase
    * Default: Generated based on country
    */
-  lastName: string;
+  lastName?: string;
   
   /**
    * Country code for the purchase (ISO code, e.g., 'US', 'GB', 'DE')

@@ -45,12 +45,17 @@ const SELECTORS = {
   amountInput: 'input[name="bill_amount"]',
 
   // Payment method selection
-  paymentMethodOption: (method: string) => `button[data-testid="payment-method-${method}"]`,
+  paymentMethodOption: (method: string) => `button[data-cy="payment-method-${method}-button"]`,
+  continueButton: 'button[data-cy="continue-button"]',
 
   // Customer information dialog
   firstNameInput: 'input[id="first_name"], input[name="first_name"]',
   lastNameInput: 'input[id="last_name"], input[name="last_name"]',
   payNowButton: 'button[name="pay-now-button"]',
+  
+  // Email input and continue button
+  emailInput: 'input[id="email"], input[name="email"], input[data-cy="email-input"]',
+  continueToPaymentButton: 'button[data-cy="continue-to-payment-button"]',
 
   // Deposit information
   depositAddress: 'div[data-testid="deposit-address"]',
@@ -339,7 +344,7 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         await humanType(
           this.frameHandle,
           SELECTORS.firstNameInput,
-          this.options.firstName,
+          this.options.firstName!,
           { clearFirst: true, typingSpeed: 'medium' },
           this.options.timeout,
           this.log.bind(this)
@@ -349,7 +354,7 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         await humanType(
           this.frameHandle,
           SELECTORS.lastNameInput,
-          this.options.lastName,
+          this.options.lastName!,
           { clearFirst: true, typingSpeed: 'medium' },
           this.options.timeout,
           this.log.bind(this)
@@ -367,13 +372,50 @@ export class BitrefillBrowser implements IBitrefillBrowser {
           this.options.timeout,
           this.log.bind(this)
         );
+
+        // Enter email
+        await this.frameHandle.waitForSelector(SELECTORS.emailInput, {
+          timeout: this.options.timeout,
+        });
         
+        // Generate email from first and last name
+        const email = `${this.options.firstName!.toLowerCase()}.${this.options.lastName!.toLowerCase()}@gmail.com`;
+        this.log(`Entering email: ${email}`);
+        
+        await humanType(
+          this.frameHandle,
+          SELECTORS.emailInput,
+          email,
+          { clearFirst: true, typingSpeed: 'medium' },
+          this.options.timeout,
+          this.log.bind(this)
+        );
+        
+        // Add a small delay like a human would
+        await randomSleep(500, 1200);
+        
+        // Wait for continue to payment button to be enabled
+        this.log('Waiting for continue to payment button to be enabled...');
+        await this.frameHandle.waitForSelector(`${SELECTORS.continueToPaymentButton}:not([disabled])`, {
+          timeout: this.options.timeout,
+        });
+        
+        // Click the continue to payment button
+        this.log('Clicking continue to payment button...');
+        const continueToPaymentBtn = this.frameHandle.locator(SELECTORS.continueToPaymentButton);
+        await humanClickLocator(
+          this.frameHandle,
+          continueToPaymentBtn,
+          this.options.timeout,
+          this.log.bind(this)
+        );
+
       } catch (error) {
         this.log(`Warning: Error handling customer information dialog: ${error instanceof Error ? error.message : String(error)}`);
-        this.log('Continuing with navigation...');
+        this.log('Continuing with selection...');
       }
 
-      this.log('Product navigation complete');
+      this.log('Product selection complete');
     }, this.options.maxRetries || 3);
   }
 
@@ -399,12 +441,10 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         timeout: this.options.timeout,
       });
 
-      // Add some random human-like behavior
-      if (shouldPerformAction(0.6)) {
-        // Sometimes scroll around a bit before selecting
-        await humanScroll(this.frameHandle, 'down', 'random', 'medium', this.log.bind(this));
-        await randomSleep(500, 1200);
-      }
+      // Add random human-like exploration behavior
+      this.log('Exploring payment method options...');
+      await randomExploration(this.frameHandle, this.log.bind(this));
+      await randomSleep(500, 1200);
 
       // Select payment method with human-like click
       this.log(`Clicking on ${method} payment method option...`);
@@ -417,15 +457,17 @@ export class BitrefillBrowser implements IBitrefillBrowser {
 
       // Wait for continue button and click it with human-like behavior
       this.log('Waiting for continue button...');
-      const continueBtn = this.frameHandle.getByRole("button", { name: "Continue" });
+      await this.frameHandle.waitForSelector(SELECTORS.continueButton, {
+        timeout: this.options.timeout,
+      });
 
       // Add a small delay like a human would
       await randomSleep(800, 1500);
 
       this.log('Clicking continue button...');
-      await humanClickLocator(
+      await humanClick(
         this.frameHandle,
-        continueBtn,
+        SELECTORS.continueButton,
         this.options.timeout,
         this.log.bind(this)
       );

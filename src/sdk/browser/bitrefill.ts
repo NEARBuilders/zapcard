@@ -26,11 +26,11 @@ const SELECTORS = {
   cookiesAcceptAllButton: 'button[data-cy="accept-cookies"]',
 
   // Product selection
-  productSearch: 'input[placeholder="Search for gift cards"]',
-  visaGiftCardOption: 'div[data-testid="product-item-visa"]',
+  productSearch: 'input[placeholder="Search for products or phone number"]',
+  visaGiftCardOption: 'li a[href*="/physical-prepaid-visa-usa/"]',
 
-  // Denomination selection
-  denominationOption: (value: number) => `button[data-testid="denomination-option-${value}"]`,
+  // Amount input
+  amountInput: 'input[name="bill_amount"]',
 
   // Payment method selection
   paymentMethodOption: (method: string) => `button[data-testid="payment-method-${method}"]`,
@@ -41,7 +41,7 @@ const SELECTORS = {
   depositQrCode: 'img[data-testid="deposit-qr-code"]',
 
   // Purchase completion
-  continueButton: 'button[data-testid="continue-button"]',
+  submitButton: 'button[type="submit"]',
 
   // Gift card details
   cardNumber: 'div[data-testid="card-number"]',
@@ -302,40 +302,31 @@ export class BitrefillBrowser implements IBitrefillBrowser {
     await retry(async () => {
       if (!this.frameHandle) return;
 
-      // Search for Visa gift card
-      this.log('Filling search input...');
-      await this.frameHandle.fill(SELECTORS.productSearch, 'Visa Gift Card');
+      // Navigate directly to the Virtual Prepaid Visa page
+      this.log('Navigating directly to Virtual Prepaid Visa page...');
+      await this.frameHandle.goto('https://embed.bitrefill.com/us/en/gift-cards/virtual-prepaid-visa-usa/');
+      
+      this.log('Waiting for page to load...');
+      await this.frameHandle.waitForLoadState('networkidle');
 
-      this.log('Pressing Enter to search...');
-      await this.frameHandle.press(SELECTORS.productSearch, 'Enter');
-
-      // Wait for search results and click on Visa gift card
-      this.log('Waiting for Visa gift card option...');
-      await this.frameHandle.waitForSelector(SELECTORS.visaGiftCardOption, {
+      // Wait for amount input to appear and fill it using getByRole
+      this.log('Waiting for amount input field...');
+      await this.frameHandle.waitForSelector(SELECTORS.amountInput, {
         timeout: this.options.timeout,
       });
 
-      this.log('Clicking on Visa gift card option...');
-      await this.frameHandle.click(SELECTORS.visaGiftCardOption);
+      // Enter the denomination amount using getByRole for better resilience
+      this.log(`Entering amount: $${denomination}`);
+      await this.frameHandle.getByRole('textbox', { name: 'bill_amount' }).fill(denomination.toString());
 
-      // Wait for denomination options to appear
-      this.log(`Waiting for $${denomination} denomination option...`);
-      await this.frameHandle.waitForSelector(SELECTORS.denominationOption(denomination), {
+      // Wait for add to cart button and click it
+      this.log('Waiting for add to cart button...');
+      await this.frameHandle.waitForSelector(SELECTORS.submitButton, {
         timeout: this.options.timeout,
       });
 
-      // Select denomination
-      this.log(`Clicking on $${denomination} denomination option...`);
-      await this.frameHandle.click(SELECTORS.denominationOption(denomination));
-
-      // Wait for continue button and click it
-      this.log('Waiting for continue button...');
-      await this.frameHandle.waitForSelector(SELECTORS.continueButton, {
-        timeout: this.options.timeout,
-      });
-
-      this.log('Clicking continue button...');
-      await this.frameHandle.click(SELECTORS.continueButton);
+      this.log('Clicking add to cart button...');
+      await this.frameHandle.getByRole('button', { name: /add to cart/i }).click();
 
       this.log('Product navigation complete');
     }, this.options.maxRetries || 3);
@@ -369,12 +360,12 @@ export class BitrefillBrowser implements IBitrefillBrowser {
 
       // Wait for continue button and click it
       this.log('Waiting for continue button...');
-      await this.frameHandle.waitForSelector(SELECTORS.continueButton, {
+      await this.frameHandle.waitForSelector(SELECTORS.submitButton, {
         timeout: this.options.timeout,
       });
 
       this.log('Clicking continue button...');
-      await this.frameHandle.click(SELECTORS.continueButton);
+      await this.frameHandle.click(SELECTORS.submitButton);
 
       this.log('Payment method selection complete');
     }, this.options.maxRetries || 3);

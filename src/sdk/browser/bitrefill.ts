@@ -58,9 +58,8 @@ const SELECTORS = {
   continueToPaymentButton: 'button[data-cy="continue-to-payment-button"]',
 
   // Deposit information
-  depositAddress: 'div[data-testid="deposit-address"]',
-  depositAmount: 'div[data-testid="deposit-amount"]',
-  depositQrCode: 'img[data-testid="deposit-qr-code"]',
+  copyButton: 'button:has-text("Copy")',
+  qrCodeButton: 'button:has-text("Scan QR")',
 
   // Purchase completion
   submitButton: 'button[type="submit"]',
@@ -121,6 +120,14 @@ export class BitrefillBrowser implements IBitrefillBrowser {
 
       // Launch browser with minimal options to mimic a normal user browser
       this.browser = await chromium.launch({
+        args: [
+          "--disable-blink-features=AutomationControlled",
+          "--disable-extensions",
+          "--disable-infobars",
+          "--enable-automation",
+          "--no-first-run",
+          "--enable-webgl",
+        ],
         headless: this.options.headless,
         timeout: this.options.timeout,
       });
@@ -444,7 +451,7 @@ export class BitrefillBrowser implements IBitrefillBrowser {
       // Add random human-like exploration behavior
       this.log('Exploring payment method options...');
       await randomExploration(this.frameHandle, this.log.bind(this));
-      await randomSleep(500, 1200);
+      await randomSleep(1000, 3000);
 
       // Select payment method with human-like click
       this.log(`Clicking on ${method} payment method option...`);
@@ -462,7 +469,7 @@ export class BitrefillBrowser implements IBitrefillBrowser {
       });
 
       // Add a small delay like a human would
-      await randomSleep(800, 1500);
+      await randomSleep(1000, 2500);
 
       this.log('Clicking continue button...');
       await humanClick(
@@ -491,13 +498,13 @@ export class BitrefillBrowser implements IBitrefillBrowser {
 
     // Use retry utility for resilience
     return await retry(async () => {
-      if (!this.frameHandle) {
+      if (!this.frameHandle || !this.page) {
         throw new Error('Browser not initialized');
       }
 
-      // Wait for deposit address to appear
-      this.log('Waiting for deposit address...');
-      await this.frameHandle.waitForSelector(SELECTORS.depositAddress, {
+      // Wait for copy buttons to appear
+      this.log('Waiting for copy buttons to appear...');
+      await this.frameHandle.waitForSelector(SELECTORS.copyButton, {
         timeout: this.options.timeout,
       });
 
@@ -509,27 +516,47 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         await humanScroll(this.frameHandle, 'up', 'random', 'slow', this.log.bind(this));
         await randomSleep(300, 800);
       }
+      
+      // Extract deposit information by clicking the address copy button
+      this.log('Waiting for address copy button...');
+      const copyButtons = this.frameHandle.locator(SELECTORS.copyButton);
 
-      // Extract deposit information
-      this.log('Extracting deposit address...');
-      const address = await this.frameHandle.textContent(SELECTORS.depositAddress) || '';
+      this.log('Clicking address copy button...');
+      await humanClickLocator(
+        this.frameHandle,
+        copyButtons.first(),
+        this.options.timeout,
+        this.log.bind(this)
+      );
 
-      this.log('Extracting deposit amount...');
-      const amount = await this.frameHandle.textContent(SELECTORS.depositAmount) || '';
-
-      // Extract QR code if available
-      let qrCodeUrl: string | undefined;
-      try {
-        this.log('Checking for QR code...');
-        const qrCodeElement = await this.frameHandle.waitForSelector(SELECTORS.depositQrCode, {
-          timeout: 5000
-        });
-        qrCodeUrl = await qrCodeElement.getAttribute('src') || undefined;
-        this.log('QR code found');
-      } catch (error) {
-        this.log('QR code not available');
-        // QR code might not be available, which is fine
-      }
+      
+      // Wait for clipboard to be populated
+      await randomSleep(500, 1000);
+      
+      // Get address from clipboard
+      const address = await this.page.evaluate(() => navigator.clipboard.readText());
+      console.log(`Deposit address: ${address}`);
+      
+      // Add a small delay like a human would
+      await randomSleep(500, 1000);
+      
+      // Click the amount copy button
+      this.log('Waiting for amount copy button...');
+      
+      this.log('Clicking amount copy button...');
+      await humanClickLocator(
+        this.frameHandle,
+        copyButtons.last(),
+        this.options.timeout,
+        this.log.bind(this)
+      );
+      
+      // Wait for clipboard to be populated
+      await randomSleep(500, 1000);
+      
+      // Get amount from clipboard
+      const amount = await this.page.evaluate(() => navigator.clipboard.readText());
+      console.log(`Deposit amount: ${amount}`);
 
       this.log('Deposit information extraction complete');
 
@@ -537,7 +564,6 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         address: address.trim(),
         paymentMethod: method,
         amount: amount.trim(),
-        qrCodeUrl,
       };
     }, this.options.maxRetries || 3);
   }

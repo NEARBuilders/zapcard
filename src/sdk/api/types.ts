@@ -16,22 +16,22 @@ export enum CardDenomination {
  * Supported payment methods
  */
 export enum PaymentMethod {
-  BASE_USDC = 'usdc_base',
-  ZCASH = 'zcash',
+  BASE_USDC = "usdc_base",
+  ZCASH = "zcash",
 }
 
 /**
  * Purchase status
  */
 export enum PurchaseStatus {
-  INITIALIZED = 'initialized',
-  NAVIGATING_CHECKOUT = 'navigating_checkout',
-  AWAITING_PAYMENT = 'awaiting_payment',
-  PROCESSING_PAYMENT = 'processing_payment',
-  COMPLETING_PURCHASE = 'completing_purchase',
-  PURCHASE_COMPLETE = 'purchase_complete',
-  PURCHASE_FAILED = 'purchase_failed',
-  ERROR = 'error',
+  INITIALIZED = "initialized",
+  NAVIGATING_CHECKOUT = "navigating_checkout",
+  AWAITING_PAYMENT = "awaiting_payment",
+  PROCESSING_PAYMENT = "processing_payment",
+  COMPLETING_PURCHASE = "completing_purchase",
+  PURCHASE_COMPLETE = "purchase_complete",
+  PURCHASE_FAILED = "purchase_failed",
+  ERROR = "error",
 }
 
 /**
@@ -50,24 +50,24 @@ export interface PurchaseOptions {
    * Gift card denomination
    */
   denomination: CardDenomination;
-  
+
   /**
    * Payment method
    */
   paymentMethod: PaymentMethod;
-  
+
   /**
    * First name for the purchase (optional)
    * If not provided, a name will be generated based on country or default to US
    */
   firstName?: string;
-  
+
   /**
    * Last name for the purchase (optional)
    * If not provided, a name will be generated based on country or default to US
    */
   lastName?: string;
-  
+
   /**
    * Country code for name generation (optional)
    * ISO code for the country (e.g., 'US', 'GB', 'DE')
@@ -75,24 +75,24 @@ export interface PurchaseOptions {
    * Defaults to 'US' if not specified
    */
   country?: string;
-  
+
   /**
    * Gender for name generation (optional)
    * Only used if firstName or lastName is not provided
    * Defaults to random selection if not specified
    */
   gender?: Gender;
-  
+
   /**
    * Headless mode (default: true)
    */
   headless?: boolean;
-  
+
   /**
    * Timeout in milliseconds (default: 30000)
    */
   timeout?: number;
-  
+
   /**
    * Maximum retry attempts (default: 3)
    */
@@ -107,17 +107,17 @@ export interface DepositInfo {
    * Deposit address
    */
   address: string;
-  
+
   /**
    * Payment method
    */
   paymentMethod: PaymentMethod;
-  
+
   /**
    * Amount to deposit
    */
   amount: string;
-  
+
   /**
    * QR code data URL (if available)
    */
@@ -132,17 +132,17 @@ export interface GiftCardDetails {
    * Card number
    */
   cardNumber: string;
-  
+
   /**
    * Card expiration date
    */
   expirationDate: string;
-  
+
   /**
    * Card CVV
    */
   cvv: string;
-  
+
   /**
    * Card denomination
    */
@@ -157,17 +157,17 @@ export interface PurchaseResult {
    * Purchase status
    */
   status: PurchaseStatus;
-  
+
   /**
    * Deposit information (available when status is AWAITING_PAYMENT)
    */
   depositInfo?: DepositInfo;
-  
+
   /**
    * Gift card details (available when status is PURCHASE_COMPLETE)
    */
   giftCardDetails?: GiftCardDetails;
-  
+
   /**
    * Error message (available when status is ERROR or PURCHASE_FAILED)
    */
@@ -177,4 +177,7 @@ export interface PurchaseResult {
 /**
  * Purchase status update callback
  */
-export type StatusUpdateCallback = (status: PurchaseStatus, details?: any) => void;
+export type StatusUpdateCallback = (
+  status: PurchaseStatus,
+  details?: any,
+) => void;

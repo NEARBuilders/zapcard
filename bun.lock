@@ -15,7 +15,7 @@
         "@typescript-eslint/eslint-plugin": "latest",
         "@typescript-eslint/parser": "latest",
         "eslint": "latest",
-        "prettier": "latest",
+        "prettier": "^3.5.3",
         "typescript": "^5",
       },
     },

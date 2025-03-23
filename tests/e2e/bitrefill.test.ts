@@ -2,11 +2,11 @@
  * End-to-end tests for Bitrefill browser automation
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
-import { BitrefillBrowser } from '../../src/sdk/browser';
-import { CardDenomination, PaymentMethod } from '../../src/sdk/api/types';
+import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { BitrefillBrowser } from "../../src/sdk/browser";
+import { CardDenomination, PaymentMethod } from "../../src/sdk/api/types";
 
-describe('Bitrefill Browser Automation', () => {
+describe("Bitrefill Browser Automation", () => {
   let browser: BitrefillBrowser;
 
   beforeAll(() => {
@@ -22,7 +22,7 @@ describe('Bitrefill Browser Automation', () => {
     await browser.close();
   });
 
-  test('should navigate to Bitrefill and get deposit address for $50 Visa gift card', async () => {
+  test("should navigate to Bitrefill and get deposit address for $50 Visa gift card", async () => {
     // Initialize browser
     await browser.initialize();
 
@@ -44,6 +44,6 @@ describe('Bitrefill Browser Automation', () => {
     expect(depositInfo.amount.length).toBeGreaterThan(0);
 
     // Log deposit information for manual verification
-    console.log('Deposit Information:', depositInfo);
+    console.log("Deposit Information:", depositInfo);
   }, 120000); // 2 minute timeout for this test
 });

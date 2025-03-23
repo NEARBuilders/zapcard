@@ -1,0 +1,95 @@
+# Cline Rules for Sneaky Link Project
+
+## Project Patterns
+
+1. **Modular Architecture**
+   - Keep components loosely coupled
+   - Use clear interfaces between modules
+   - Maintain separation of concerns
+
+2. **Error Handling**
+   - Implement comprehensive error handling
+   - Use circuit breaker pattern for external services
+   - Implement retry with exponential backoff
+   - Provide clear error messages
+
+3. **Testing**
+   - Write tests for all components
+   - Use mocks for external dependencies
+   - Implement end-to-end tests for critical flows
+
+4. **Documentation**
+   - Document all public APIs
+   - Keep memory bank up to date
+   - Document key decisions and rationales
+
+## User Preferences
+
+1. **Technology Preferences**
+   - Use Bun for all JavaScript/TypeScript runtime needs
+   - Prefer Playwright over Puppeteer for browser automation
+   - Keep dependencies minimal and modern
+   - Maintain simplicity in implementation
+
+2. **Code Style**
+   - Use TypeScript for all code
+   - Follow consistent naming conventions
+   - Implement proper error handling
+   - Write clear, self-documenting code
+
+3. **Development Workflow**
+   - Implement features incrementally
+   - Test thoroughly before moving on
+   - Keep memory bank updated with progress
+   - Document challenges and solutions
+
+## Implementation Guidelines
+
+1. **Browser Automation**
+   - Use stable selectors (prefer data attributes over CSS selectors)
+   - Implement timeouts and retries for all operations
+   - Handle unexpected UI changes gracefully
+   - Log all navigation steps for debugging
+
+2. **Blockchain Integration**
+   - Handle transaction confirmation times appropriately
+   - Implement proper error handling for network issues
+   - Provide clear status updates to users
+   - Test thoroughly with testnet before mainnet
+
+3. **Frontend Development**
+   - Keep UI simple and intuitive
+   - Implement responsive design
+   - Provide clear feedback on all operations
+   - Handle errors gracefully with user-friendly messages
+
+4. **MCP Server**
+   - Implement clear tool definitions
+   - Provide comprehensive documentation
+   - Handle errors gracefully
+   - Return structured responses
+
+## Known Challenges
+
+1. **Bitrefill Integration**
+   - UI may change unexpectedly
+   - Need to implement robust selectors
+   - May need to handle different product pages
+
+2. **Blockchain Confirmation**
+   - Transactions may take time to confirm
+   - Need to implement appropriate waiting and polling
+   - Handle timeout scenarios gracefully
+
+3. **Error Recovery**
+   - Multiple potential failure points
+   - Need to implement comprehensive recovery strategies
+   - Must maintain system state during recovery
+
+## Project Evolution
+
+This section will be updated as the project evolves and new patterns emerge.
+
+## Tool Usage Patterns
+
+This section will be updated as we establish tool usage patterns.

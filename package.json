@@ -21,8 +21,9 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
-    "playwright": "latest",
+    "full-name-generator": "^0.1.4",
     "near-api-js": "latest",
+    "playwright": "latest",
     "zod": "latest"
   },
   "devDependencies": {

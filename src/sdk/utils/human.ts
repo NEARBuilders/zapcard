@@ -4,6 +4,60 @@
 
 import type { Frame, Locator } from 'playwright';
 import { randomSleep, randomInt } from './index';
+import { fullName as generateFullName, firstName as generateFirstName, lastName as generateLastName } from 'full-name-generator';
+import { Gender } from '../api/types';
+
+/**
+ * Generate a full name based on country and gender
+ * 
+ * @param country ISO country code (e.g., 'US', 'GB', 'DE')
+ * @param gender Gender for name generation
+ * @returns Generated full name
+ */
+export function generateHumanName(
+  country: string = 'US',
+  gender: Gender = Math.random() < 0.5 ? Gender.MALE : Gender.FEMALE
+): { firstName: string; lastName: string } {
+  // Generate full name
+  const fullNameStr = generateFullName(country, gender);
+  
+  // Split into first and last name
+  const nameParts = fullNameStr.split(' ');
+  
+  // Extract first and last name
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+  
+  return { firstName, lastName };
+}
+
+/**
+ * Generate a first name based on country and gender
+ * 
+ * @param country ISO country code (e.g., 'US', 'GB', 'DE')
+ * @param gender Gender for name generation
+ * @returns Generated first name
+ */
+export function generateHumanFirstName(
+  country: string = 'US',
+  gender: Gender = Math.random() < 0.5 ? Gender.MALE : Gender.FEMALE
+): string {
+  return generateFirstName(country, gender);
+}
+
+/**
+ * Generate a last name based on country and gender
+ * 
+ * @param country ISO country code (e.g., 'US', 'GB', 'DE')
+ * @param gender Gender for name generation (required for some countries)
+ * @returns Generated last name
+ */
+export function generateHumanLastName(
+  country: string = 'US',
+  gender?: Gender
+): string {
+  return generateLastName(country, gender);
+}
 
 /**
  * Perform human-like scrolling in a frame

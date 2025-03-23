@@ -5,6 +5,7 @@
       "name": "sneaky-link",
       "dependencies": {
         "@modelcontextprotocol/sdk": "latest",
+        "full-name-generator": "^0.1.4",
         "near-api-js": "latest",
         "playwright": "latest",
         "zod": "latest",
@@ -245,6 +246,8 @@
     "fresh": ["fresh@2.0.0", "", {}, "sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A=="],
 
     "fsevents": ["fsevents@2.3.2", "", { "os": "darwin" }, "sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA=="],
+
+    "full-name-generator": ["full-name-generator@0.1.4", "", {}, "sha512-sy8J6ni9IkxVEfwGtQac0dNmW/Izag33QMhEhjp06O3mgBPldKz/vYaHzhyJJWYt9xgJ8m/7picH1DG7Ol8UOg=="],
 
     "function-bind": ["function-bind@1.1.2", "", {}, "sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA=="],
 

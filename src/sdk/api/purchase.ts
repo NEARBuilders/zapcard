@@ -2,9 +2,10 @@
  * Purchase API for the Sneaky Link SDK
  */
 
-import { CardDenomination, PaymentMethod, PurchaseStatus } from './types';
+import { CardDenomination, Gender, PaymentMethod, PurchaseStatus } from './types';
 import type { PurchaseOptions, PurchaseResult, StatusUpdateCallback } from './types';
 import { BitrefillBrowser } from '../browser';
+import { generateHumanName } from '../utils/human';
 
 /**
  * Default purchase options
@@ -29,11 +30,32 @@ export async function purchaseGiftCard(
   // Merge with default options
   const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
   
+  // Generate or use provided name information
+  let firstName = mergedOptions.firstName;
+  let lastName = mergedOptions.lastName;
+  
+  // If either name part is missing, generate based on country and gender
+  if (!firstName || !lastName) {
+    const country = mergedOptions.country || 'US';
+    const gender = mergedOptions.gender !== undefined 
+      ? mergedOptions.gender 
+      : Math.random() < 0.5 ? Gender.MALE : Gender.FEMALE;
+    
+    const generatedName = generateHumanName(country, gender);
+    
+    // Use generated name parts only if not provided
+    firstName = firstName || generatedName.firstName;
+    lastName = lastName || generatedName.lastName;
+  }
+  
   // Initialize browser
   const browser = new BitrefillBrowser({
     headless: mergedOptions.headless,
     timeout: mergedOptions.timeout,
     maxRetries: mergedOptions.maxRetries,
+    firstName,
+    lastName,
+    country: mergedOptions.country,
   });
   
   try {

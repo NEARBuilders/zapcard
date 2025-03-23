@@ -6,6 +6,8 @@ import type { Frame, Page, Browser as PlaywrightBrowser } from 'playwright';
 import { chromium } from 'playwright';
 import type { CardDenomination, DepositInfo, PaymentMethod } from '../api/types';
 import {
+  generateHumanFirstName,
+  generateHumanLastName,
   handleCookieBanner,
   humanClick,
   humanClickLocator,
@@ -45,6 +47,11 @@ const SELECTORS = {
   // Payment method selection
   paymentMethodOption: (method: string) => `button[data-testid="payment-method-${method}"]`,
 
+  // Customer information dialog
+  firstNameInput: 'input[id="first_name"], input[name="first_name"]',
+  lastNameInput: 'input[id="last_name"], input[name="last_name"]',
+  payNowButton: 'button[name="pay-now-button"]',
+
   // Deposit information
   depositAddress: 'div[data-testid="deposit-address"]',
   depositAmount: 'div[data-testid="deposit-amount"]',
@@ -68,6 +75,9 @@ const DEFAULT_OPTIONS: BrowserOptions = {
   headless: true,
   timeout: 30000,
   maxRetries: 3,
+  firstName: generateHumanFirstName(),
+  lastName: generateHumanLastName(),
+  country: 'US',
 };
 
 /**
@@ -316,6 +326,52 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         this.options.timeout,
         this.log.bind(this)
       );
+
+      // Wait for the customer information dialog to appear
+      this.log('Waiting for customer information dialog...');
+      try {
+        // Wait for first name input to appear
+        await this.frameHandle.waitForSelector(SELECTORS.firstNameInput, {
+          timeout: this.options.timeout,
+        });
+
+        this.log(`Entering first name: ${this.options.firstName}`);
+        await humanType(
+          this.frameHandle,
+          SELECTORS.firstNameInput,
+          this.options.firstName,
+          { clearFirst: true, typingSpeed: 'medium' },
+          this.options.timeout,
+          this.log.bind(this)
+        );
+        
+        this.log(`Entering last name: ${this.options.lastName}`);
+        await humanType(
+          this.frameHandle,
+          SELECTORS.lastNameInput,
+          this.options.lastName,
+          { clearFirst: true, typingSpeed: 'medium' },
+          this.options.timeout,
+          this.log.bind(this)
+        );
+
+        // Add a small delay like a human would
+        await randomSleep(500, 1200);
+
+        // Click the "Pay now" button
+        this.log('Clicking Pay now button...');
+        const payNowBtn = this.frameHandle.locator(SELECTORS.payNowButton);
+        await humanClickLocator(
+          this.frameHandle,
+          payNowBtn,
+          this.options.timeout,
+          this.log.bind(this)
+        );
+        
+      } catch (error) {
+        this.log(`Warning: Error handling customer information dialog: ${error instanceof Error ? error.message : String(error)}`);
+        this.log('Continuing with navigation...');
+      }
 
       this.log('Product navigation complete');
     }, this.options.maxRetries || 3);

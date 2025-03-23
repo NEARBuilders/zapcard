@@ -35,6 +35,14 @@ export enum PurchaseStatus {
 }
 
 /**
+ * Gender for name generation
+ */
+export enum Gender {
+  MALE = 0,
+  FEMALE = 1,
+}
+
+/**
  * Purchase options
  */
 export interface PurchaseOptions {
@@ -47,6 +55,33 @@ export interface PurchaseOptions {
    * Payment method
    */
   paymentMethod: PaymentMethod;
+  
+  /**
+   * First name for the purchase (optional)
+   * If not provided, a name will be generated based on country or default to US
+   */
+  firstName?: string;
+  
+  /**
+   * Last name for the purchase (optional)
+   * If not provided, a name will be generated based on country or default to US
+   */
+  lastName?: string;
+  
+  /**
+   * Country code for name generation (optional)
+   * ISO code for the country (e.g., 'US', 'GB', 'DE')
+   * Only used if firstName or lastName is not provided
+   * Defaults to 'US' if not specified
+   */
+  country?: string;
+  
+  /**
+   * Gender for name generation (optional)
+   * Only used if firstName or lastName is not provided
+   * Defaults to random selection if not specified
+   */
+  gender?: Gender;
   
   /**
    * Headless mode (default: true)

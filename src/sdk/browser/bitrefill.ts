@@ -42,6 +42,8 @@ const SELECTORS = {
 
   // Purchase completion
   submitButton: 'button[type="submit"]',
+  // Multiple selectors for Add to Cart button to increase chances of finding it
+  addToCartButton: 'button:has-text("Add to cart")',
 
   // Gift card details
   cardNumber: 'div[data-testid="card-number"]',
@@ -315,18 +317,32 @@ export class BitrefillBrowser implements IBitrefillBrowser {
         timeout: this.options.timeout,
       });
 
-      // Enter the denomination amount using getByRole for better resilience
+      // Enter the denomination amount using direct selector for better reliability
       this.log(`Entering amount: $${denomination}`);
-      await this.frameHandle.getByRole('textbox', { name: 'bill_amount' }).fill(denomination.toString());
+      
+      // First clear the input field
+      await this.frameHandle.fill(SELECTORS.amountInput, '');
+      
+      // Then type the amount directly
+      await this.frameHandle.type(SELECTORS.amountInput, denomination.toString(), { delay: 100 });
+      
+      // Force blur event to trigger validation
+      await this.frameHandle.evaluate((selector) => {
+        const input = document.querySelector(selector) as HTMLInputElement;
+        if (input) {
+          input.blur();
+          // Also dispatch input and change events to ensure the value is registered
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, SELECTORS.amountInput);
 
       // Wait for add to cart button and click it
       this.log('Waiting for add to cart button...');
-      await this.frameHandle.waitForSelector(SELECTORS.submitButton, {
-        timeout: this.options.timeout,
-      });
+      const submitBtn = this.frameHandle.getByRole("button", { name: "Add to cart"});
 
       this.log('Clicking add to cart button...');
-      await this.frameHandle.getByRole('button', { name: /add to cart/i }).click();
+      await submitBtn.click();
 
       this.log('Product navigation complete');
     }, this.options.maxRetries || 3);

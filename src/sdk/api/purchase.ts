@@ -4,6 +4,7 @@
 
 import {
   CardDenomination,
+  type DepositInfo,
   Gender,
   PaymentMethod,
   PurchaseStatus,
@@ -134,4 +135,72 @@ export async function completeGiftCardPurchase(
   // 3. Extract and return the gift card details
 
   throw new Error("Not implemented yet");
+}
+
+/**
+ * Initiate checkout process and get deposit information
+ * 
+ * This function is used by both the CLI and API to initiate the checkout process
+ * and get the deposit information (address, amount, payment method).
+ * 
+ * @param options Purchase options
+ * @returns Promise resolving to deposit information
+ */
+export async function initiateCheckout(
+  options: PurchaseOptions
+): Promise<DepositInfo> {
+  // Merge with default options
+  const mergedOptions = { ...DEFAULT_OPTIONS, ...options };
+
+  // Generate or use provided name information
+  let firstName = mergedOptions.firstName;
+  let lastName = mergedOptions.lastName;
+
+  // If either name part is missing, generate based on country and gender
+  if (!firstName || !lastName) {
+    const country = mergedOptions.country || "US";
+    const gender =
+      mergedOptions.gender !== undefined
+        ? mergedOptions.gender
+        : Math.random() < 0.5
+          ? Gender.MALE
+          : Gender.FEMALE;
+
+    const generatedName = generateHumanName(country, gender);
+
+    // Use generated name parts only if not provided
+    firstName = firstName || generatedName.firstName;
+    lastName = lastName || generatedName.lastName;
+  }
+
+  // Initialize browser
+  const browser = new BitrefillBrowser({
+    headless: mergedOptions.headless,
+    timeout: mergedOptions.timeout,
+    maxRetries: mergedOptions.maxRetries,
+    firstName,
+    lastName,
+    country: mergedOptions.country,
+  });
+
+  try {
+    // Initialize browser
+    await browser.initialize();
+    
+    // Navigate to product
+    await browser.navigateToProduct(mergedOptions.denomination);
+    
+    // Select payment method
+    await browser.selectPaymentMethod(mergedOptions.paymentMethod);
+    
+    // Get deposit information
+    const depositInfo = await browser.getDepositInfo(mergedOptions.paymentMethod);
+    
+    return depositInfo;
+  } catch (error) {
+    throw new Error(`Checkout process failed: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    // Close browser
+    await browser.close();
+  }
 }

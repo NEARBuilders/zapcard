@@ -13,13 +13,16 @@
     "mcp": "bun run src/mcp/server.ts",
     "cli": "bun run src/cli.ts",
     "cli:visible": "bun run src/cli.ts --visible",
+    "api": "bun run src/api/server.ts",
     "fmt": "prettier --write '**/*.{js,jsx,ts,tsx,json}'",
     "fmt:check": "prettier --check '**/*.{js,jsx,ts,tsx,json}'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
     "full-name-generator": "^0.1.4",
+    "hono": "^4.7.8",
     "near-api-js": "latest",
+    "p-queue": "^8.1.0",
     "playwright": "latest",
     "zod": "latest"
   },

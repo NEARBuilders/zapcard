@@ -5,7 +5,7 @@
  */
 
 import { CardDenomination, PaymentMethod } from "./sdk/api/types";
-import { BitrefillBrowser } from "./sdk/browser";
+import { initiateCheckout } from "./sdk/api/purchase";
 
 /**
  * Main function
@@ -24,28 +24,15 @@ async function main() {
   console.log(`Headless Mode: ${headless ? "Yes" : "No"}`);
   console.log("");
 
-  // Create browser instance
-  const browser = new BitrefillBrowser({
-    headless,
-    timeout: 60000,
-  });
-
   try {
-    // Initialize browser
-    console.log("Initializing browser...");
-    await browser.initialize();
-
-    // Navigate to product
-    console.log("Navigating to Visa gift card...");
-    await browser.navigateToProduct(denomination);
-
-    // Select payment method
-    console.log("Selecting payment method...");
-    await browser.selectPaymentMethod(paymentMethod);
-
-    // Get deposit information
-    console.log("Getting deposit information...");
-    const depositInfo = await browser.getDepositInfo(paymentMethod);
+    // Initiate checkout process
+    console.log("Initiating checkout process...");
+    const depositInfo = await initiateCheckout({
+      denomination,
+      paymentMethod,
+      headless,
+      timeout: 60000,
+    });
 
     // Display deposit information
     console.log("\nDeposit Information:");
@@ -57,9 +44,9 @@ async function main() {
       console.log(`QR Code: ${depositInfo.qrCodeUrl}`);
     }
 
-    // Wait for user input before closing
+    // Wait for user input before exiting if not headless
     if (!headless) {
-      console.log("\nPress Enter to close the browser...");
+      console.log("\nPress Enter to exit...");
       await new Promise((resolve) => process.stdin.once("data", resolve));
     }
   } catch (error) {
@@ -67,9 +54,7 @@ async function main() {
       "Error:",
       error instanceof Error ? error.message : String(error),
     );
-  } finally {
-    // Close browser
-    await browser.close();
+    process.exit(1);
   }
 }
 
